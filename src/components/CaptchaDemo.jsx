@@ -7,6 +7,42 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { fetchChallenge, verifyChallenge, resolveAssetUrl } from '../api/vlurCaptcha';
 
+const DEFAULT_THEME = {
+  accent: '#F0691E',
+  soft: '#FBEBDD',
+  foreground: '#FFFFFF',
+};
+
+function normalizeHex(value, fallback) {
+  return /^#[0-9a-f]{6}$/i.test(value || '') ? value.toUpperCase() : fallback;
+}
+
+function mixHexColors(color, target = '#FFFFFF', targetRatio = 0.5) {
+  const source = normalizeHex(color, DEFAULT_THEME.accent);
+  const destination = normalizeHex(target, '#FFFFFF');
+  const ratio = Math.min(1, Math.max(0, targetRatio));
+  const channel = (start) => Math.round(
+    parseInt(source.slice(start, start + 2), 16) * (1 - ratio)
+      + parseInt(destination.slice(start, start + 2), 16) * ratio
+  );
+  return `#${[1, 3, 5].map((start) => channel(start).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+}
+
+function buildThemeStyle(theme) {
+  const accent = normalizeHex(theme?.accent, DEFAULT_THEME.accent);
+  const soft = normalizeHex(theme?.soft, mixHexColors(accent, '#FFFFFF', 0.88));
+  return {
+    '--orange': accent,
+    '--orange-2': mixHexColors(accent, '#000000', 0.18),
+    '--gold': mixHexColors(accent, '#FFFFFF', 0.25),
+    '--peach': soft,
+    '--peach-deep': mixHexColors(accent, '#FFFFFF', 0.78),
+    '--line': mixHexColors(accent, '#FFFFFF', 0.72),
+    '--line-soft': mixHexColors(accent, '#FFFFFF', 0.84),
+    '--captcha-on-accent': normalizeHex(theme?.foreground, DEFAULT_THEME.foreground),
+  };
+}
+
 /* ══════════════════════════════════════
    공통 결과 화면
 ══════════════════════════════════════ */
@@ -39,7 +75,7 @@ function FailScreen({ onReset, title = '검증 실패', desc = '정답이 아닙
         <strong>{title}</strong>
         <span>{desc}</span>
       </div>
-      <button className="demo-retry-btn" onClick={onReset}>다시 체험하기</button>
+      <button className="demo-retry-btn" onClick={onReset}>다시 시도하기</button>
     </div>
   );
 }
@@ -70,7 +106,7 @@ const WAYPOINTS = [
 const WAYPOINT_RADIUS_PX = 30; // 이 반경 안으로 포인터가 들어오면 통과로 인정
 const DROP_ZONE_ID = 'captcha-drop-drag';
 
-function useApiCaptcha(captchaType, onVerified, { onEscalate } = {}) {
+function useApiCaptcha(captchaType, onVerified, { onEscalate, onTheme } = {}) {
   const [challenge, setChallenge] = useState(null); // { challengeToken, questionImageUrl, options }
   const [loadState, setLoadState] = useState('loading'); // 'loading' | 'ready' | 'error'
   const [selected, setSelected] = useState(null); // option_id
@@ -116,13 +152,14 @@ function useApiCaptcha(captchaType, onVerified, { onEscalate } = {}) {
       .then((data) => {
         if (!mountedRef.current) return;
         setChallenge(data);
+        onTheme?.(data.theme);
         setLoadState('ready');
       })
       .catch(() => {
         if (!mountedRef.current) return;
         setLoadState('error');
       });
-  }, [captchaType]);
+  }, [captchaType, onTheme]);
 
   useEffect(() => {
     loadChallenge();
@@ -267,7 +304,7 @@ function DropZone({ dropState, missedHint, submitting }) {
   return (
     <div className={dropClass} id={DROP_ZONE_ID}>
       <div className="cart">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#F0691E" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="9" cy="21" r="1"/><circle cx="18" cy="21" r="1"/>
           <path d="M2.5 3h2l2.2 12.4a1.6 1.6 0 0 0 1.6 1.3h8.4a1.6 1.6 0 0 0 1.6-1.2L21.5 7H6"/>
         </svg>
@@ -287,10 +324,10 @@ function DropZone({ dropState, missedHint, submitting }) {
   );
 }
 
-function GhostTile({ ghost }) {
+function GhostTile({ ghost, themeStyle }) {
   if (!ghost) return null;
   return createPortal(
-    <div className="vlur-captcha-scope">
+    <div className="vlur-captcha-scope" style={themeStyle}>
       <div className="ghost" style={{ left: ghost.x, top: ghost.y, position: 'fixed' }}>
         {ghost.imageUrl && <img src={resolveAssetUrl(ghost.imageUrl)} alt="" className="tile-photo" />}
       </div>
@@ -302,9 +339,9 @@ function GhostTile({ ghost }) {
 /* ══════════════════════════════════════
    4지선다 보기 중 정답을 경유 지점을 지나 드롭존까지 드래그 (유형 2)
 ══════════════════════════════════════ */
-function MatchDragCaptcha({ onVerified, escalationNotice }) {
+function MatchDragCaptcha({ onVerified, escalationNotice, onTheme, themeStyle }) {
   const { challenge, loadState, selected, ghost, dropState, visited, missedHint, screen, submitting, waypointRefs, reset, onPointerDown } =
-    useApiCaptcha('type2_identify', onVerified);
+    useApiCaptcha('type2_identify', onVerified, { onTheme });
 
   if (screen === 'success') return <SuccessScreen onReset={reset} />;
   if (screen === 'fail')    return <FailScreen onReset={reset} />;
@@ -357,7 +394,7 @@ function MatchDragCaptcha({ onVerified, escalationNotice }) {
         <button className="reset" onClick={reset}>새로운 문제</button>
       </div>
 
-      <GhostTile ghost={ghost} />
+      <GhostTile ghost={ghost} themeStyle={themeStyle} />
     </div>
   );
 }
@@ -365,9 +402,9 @@ function MatchDragCaptcha({ onVerified, escalationNotice }) {
 /* ══════════════════════════════════════
    드래그-투-타깃 CAPTCHA (유형 1)
 ══════════════════════════════════════ */
-function DragCaptcha({ onVerified, onEscalate }) {
+function DragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
   const { challenge, loadState, selected, ghost, dropState, visited, missedHint, screen, submitting, waypointRefs, reset, onPointerDown } =
-    useApiCaptcha('type1_drag', onVerified, { onEscalate });
+    useApiCaptcha('type1_drag', onVerified, { onEscalate, onTheme });
 
   if (screen === 'success') return <SuccessScreen onReset={reset} />;
   if (screen === 'fail')    return <FailScreen onReset={reset} />;
@@ -411,7 +448,7 @@ function DragCaptcha({ onVerified, onEscalate }) {
         <button className="reset" onClick={reset}>새로운 문제</button>
       </div>
 
-      <GhostTile ghost={ghost} />
+      <GhostTile ghost={ghost} themeStyle={themeStyle} />
     </div>
   );
 }
@@ -423,6 +460,8 @@ function DragCaptcha({ onVerified, onEscalate }) {
 export default function CaptchaDemo({ onClick, onVerified }) {
   const [type, setType] = useState(1);
   const [escalated, setEscalated] = useState(false); // 유형1에서 애매하게 감지되어 자동으로 유형2로 이동한 경우
+  const [theme, setTheme] = useState(null);
+  const themeStyle = buildThemeStyle(theme);
 
   const switchType = (t) => {
     setEscalated(false); // 사용자가 직접 탭을 누른 경우 — 강제 이동 안내는 초기화
@@ -435,7 +474,7 @@ export default function CaptchaDemo({ onClick, onVerified }) {
   };
 
   return (
-    <div className="demo" id="demo" onClick={onClick}>
+    <div className="demo" id="demo" onClick={onClick} style={themeStyle}>
       <div className="demo-top">
         <div className="dots">
           <i style={{ background: type === 1 ? 'var(--orange)' : 'var(--line)' }}/>
@@ -449,9 +488,9 @@ export default function CaptchaDemo({ onClick, onVerified }) {
               style={{
                 fontFamily: 'var(--disp)', fontSize: 11, fontWeight: 700,
                 letterSpacing: '.1em', padding: '3px 10px', borderRadius: 8,
-                border: type === t ? 'none' : '1.5px solid var(--line)',
-                background: type === t ? 'linear-gradient(90deg, var(--gold), var(--orange))' : 'var(--paper)',
-                color: type === t ? 'var(--paper)' : 'var(--muted)',
+                border: type === t ? 'none' : '1.5px solid color-mix(in srgb, var(--orange) 40%, var(--line))',
+                background: type === t ? 'linear-gradient(90deg, var(--gold), var(--orange))' : 'color-mix(in srgb, var(--orange) 10%, var(--card))',
+                color: type === t ? 'var(--captcha-on-accent, var(--paper))' : 'var(--orange-2)',
                 cursor: 'pointer', transition: '.15s',
               }}
             >
@@ -462,8 +501,8 @@ export default function CaptchaDemo({ onClick, onVerified }) {
       </div>
 
       {type === 1
-        ? <DragCaptcha onVerified={onVerified} onEscalate={handleEscalate} />
-        : <MatchDragCaptcha onVerified={onVerified} escalationNotice={escalated} />}
+        ? <DragCaptcha onVerified={onVerified} onEscalate={handleEscalate} onTheme={setTheme} themeStyle={themeStyle} />
+        : <MatchDragCaptcha onVerified={onVerified} escalationNotice={escalated} onTheme={setTheme} themeStyle={themeStyle} />}
     </div>
   );
 }
