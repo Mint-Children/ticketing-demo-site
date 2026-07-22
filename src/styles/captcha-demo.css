@@ -1,0 +1,174 @@
+/* captcha-demo.css
+   AI-Captcha 프로젝트의 main.css에서 VLUR CaptchaDemo 위젯이 필요로 하는
+   규칙만 추출한 버전. 변수명(--orange 등)은 원본과 동일하게 유지해서
+   컴포넌트 코드를 그대로 재사용할 수 있게 함. .vlur-captcha-scope 안에서만
+   적용되도록 스코프를 둬서 TICKETON 사이트 자체 스타일과 충돌하지 않게 함. */
+
+.vlur-captcha-scope {
+  --paper: #FDF8F2;
+  --peach: #FBEBDD;
+  --peach-deep: #F7DEC8;
+  --ink: #241B15;
+  --ink-soft: #5C4F44;
+  --muted: #928071;
+  --orange: #F0691E;
+  --orange-2: #DD5413;
+  --gold: #F4A62A;
+  --line: #ECD9C3;
+  --line-soft: #F3E7D6;
+  --card: #FFFFFF;
+  --ok: #2E9E6B;
+  --bad: #D8492F;
+  --disp: 'Space Grotesk', 'Pretendard', sans-serif;
+  --body: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', sans-serif;
+  --shadow-sm: 0 1px 0 rgba(36,27,21,.04), 0 8px 24px -16px rgba(36,27,21,.28);
+  --shadow-md: 0 2px 0 rgba(36,27,21,.03), 0 30px 60px -34px rgba(204,84,17,.40);
+  --r: 18px;
+  font-family: var(--body);
+}
+.vlur-captcha-scope * { box-sizing: border-box; }
+
+.vlur-captcha-scope .demo {
+  width: 100%;
+  max-width: 570px;
+  margin: 0 auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+.vlur-captcha-scope .demo-top {
+  display: flex; align-items: center; gap: 10px; padding: 13px 18px;
+  border-bottom: 1px solid var(--line-soft); background: linear-gradient(var(--peach),var(--card));
+}
+.vlur-captcha-scope .demo-top .dots { display: flex; gap: 6px; }
+.vlur-captcha-scope .demo-top .dots i { width: 10px; height: 10px; border-radius: 50%; display: block; background: var(--line); }
+.vlur-captcha-scope .demo-top .dots i:first-child { background: var(--orange); }
+.vlur-captcha-scope .demo-body {
+  padding: 20px;
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+}
+.vlur-captcha-scope .demo-body .drop { margin-bottom: 20px; }
+.vlur-captcha-scope .demo-body .demo-foot { margin-top: auto; }
+.vlur-captcha-scope .demo-q {
+  position: relative; display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: var(--peach); border: 1px dashed var(--peach-deep); border-radius: 14px;
+  padding: 14px 16px; font-weight: 700; font-size: 18px; letter-spacing: -.02em;
+}
+.vlur-captcha-scope .demo-q .question-image {
+  display: block; flex: 0 1 auto; width: min(680px, 100%); min-width: 0; height: auto;
+  mix-blend-mode: multiply;
+}
+.vlur-captcha-scope .captcha-reference { display: flex; justify-content: center; margin-top: 16px; }
+.vlur-captcha-scope .captcha-reference img {
+  display: block; width: 420px; max-width: 85%; height: auto;
+  border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-sm);
+  mix-blend-mode: multiply;
+}
+.vlur-captcha-scope .tiles { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 16px; }
+.vlur-captcha-scope .tiles.choice-tiles { max-width: 650px; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px auto 0; }
+.vlur-captcha-scope .tile {
+  position: relative; aspect-ratio: 1; border: 1.5px solid var(--line); border-radius: 14px;
+  background: var(--card); cursor: grab; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 4px; touch-action: none; user-select: none; transition: .16s;
+  padding: 0; overflow: hidden;
+}
+.vlur-captcha-scope .tile:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.vlur-captcha-scope .tile:focus-visible { outline: 3px solid rgba(240,105,30,.45); outline-offset: 2px; }
+.vlur-captcha-scope .tile.sel { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(240,105,30,.16); }
+.vlur-captcha-scope .tile.dragging { opacity: .35; }
+.vlur-captcha-scope .tile svg { width: 46px; height: 46px; }
+.vlur-captcha-scope .tile-photo { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+.vlur-captcha-scope .tile .cap { font-size: 12px; color: var(--muted); font-weight: 500; }
+.vlur-captcha-scope .tile::before {
+  content: ""; position: absolute; inset: 0; border-radius: 13px; pointer-events: none;
+  background-image: radial-gradient(rgba(36,27,21,.05) 1px, transparent 1.4px);
+  background-size: 6px 6px; opacity: .6;
+}
+.vlur-captcha-scope .ghost {
+  position: fixed; z-index: 10000; width: 74px; height: 74px; pointer-events: none;
+  border-radius: 14px; border: 1.5px solid var(--orange); background: var(--card);
+  display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md);
+  transform: translate(-50%,-50%) rotate(-4deg);
+}
+.vlur-captcha-scope .ghost svg { width: 42px; height: 42px; }
+.vlur-captcha-scope .ghost .tile-photo { width: 58px; height: 58px; }
+.vlur-captcha-scope .drop {
+  margin-top: 14px; display: flex; align-items: center; gap: 14px;
+  border: 1.5px dashed var(--line); border-radius: 16px; padding: 16px 18px;
+  background: repeating-linear-gradient(45deg,var(--card),var(--card) 12px,var(--paper) 12px,var(--paper) 24px);
+  transition: .16s;
+}
+.vlur-captcha-scope .drop.hot { border-color: var(--orange); background: var(--peach); transform: scale(1.01); }
+.vlur-captcha-scope .drop.blocked { border-color: var(--bad); background: rgba(216,73,47,.08); }
+.vlur-captcha-scope .drop.done { border-style: solid; border-color: var(--ok); background: #F1FBF6; }
+.vlur-captcha-scope .drag-waypoint {
+  position: absolute; transform: translate(-50%, -50%);
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; font-family: var(--disp);
+  border: 2px dashed var(--line); color: var(--muted); background: var(--paper);
+  transition: .18s; pointer-events: none;
+}
+.vlur-captcha-scope .drag-waypoint.visited {
+  border-style: solid; border-color: var(--ok); color: #fff; background: var(--ok);
+  box-shadow: 0 0 0 4px rgba(46,158,107,.16);
+}
+.vlur-captcha-scope .drop .cart {
+  width: 46px; height: 46px; flex: 0 0 46px; display: flex; align-items: center; justify-content: center;
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 12px;
+}
+.vlur-captcha-scope .drop .cart svg { width: 26px; height: 26px; }
+.vlur-captcha-scope .drop .dtxt b { display: block; font-size: 15px; color: var(--ink); }
+.vlur-captcha-scope .drop .dtxt span { font-size: 13px; color: var(--muted); }
+.vlur-captcha-scope .demo-foot { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
+.vlur-captcha-scope .demo-foot .reset {
+  margin-left: auto; font-size: 13px; color: var(--ink-soft); background: none;
+  border: 1px solid var(--line); border-radius: 10px; padding: 7px 12px; cursor: pointer; font-weight: 500;
+}
+.vlur-captcha-scope .demo-foot .reset:hover { border-color: var(--orange); color: var(--orange-2); }
+
+.vlur-captcha-scope .demo-success-body {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; padding: 36px 24px; text-align: center;
+}
+.vlur-captcha-scope .demo-check-circle {
+  width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, #78dea4, #22a855);
+  display: flex; align-items: center; justify-content: center;
+  animation: vlur-demo-pop .38s cubic-bezier(.175,.885,.32,1.275) both;
+}
+.vlur-captcha-scope .demo-fail-circle {
+  width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, #f57a65, #c02a12);
+  display: flex; align-items: center; justify-content: center;
+  animation: vlur-demo-pop .38s cubic-bezier(.175,.885,.32,1.275) both;
+}
+.vlur-captcha-scope .demo-success-msg strong { display: block; font-family: var(--disp); font-size: 18px; font-weight: 800; color: var(--ink); }
+.vlur-captcha-scope .demo-success-msg span { font-size: 13px; color: var(--muted); margin-top: 3px; display: block; }
+.vlur-captcha-scope .demo-retry-btn {
+  margin-top: 4px; padding: 10px 24px; border-radius: 999px;
+  border: 1.5px solid var(--orange); background: var(--card);
+  color: var(--orange-2); font-size: 14px; font-weight: 700;
+  font-family: var(--disp); letter-spacing: .04em; cursor: pointer;
+  transition: background .15s, color .15s, transform .15s;
+}
+.vlur-captcha-scope .demo-retry-btn:hover { background: var(--orange); color: #fff; transform: scale(1.04); }
+
+.vlur-captcha-scope .demo-escalation-notice {
+  border: 1px solid var(--gold); background: var(--peach); border-radius: 12px;
+  padding: 10px 14px; margin-bottom: 14px;
+}
+.vlur-captcha-scope .demo-escalation-notice b { display: block; font-size: 12.5px; color: var(--orange-2); margin-bottom: 2px; }
+.vlur-captcha-scope .demo-escalation-notice span { font-size: 11.5px; color: var(--ink-soft); }
+
+@keyframes vlur-demo-pop {
+  0%   { transform: scale(0.5); opacity: 0; }
+  70%  { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+@media (max-height: 820px) {
+  .vlur-captcha-scope .demo { transform: scale(.92); }
+}
