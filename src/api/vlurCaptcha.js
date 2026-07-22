@@ -32,6 +32,7 @@ export async function fetchChallenge(captchaType) {
   return {
     challengeToken: data.challenge_token,
     captchaType: data.captcha_type,
+    theme: data.theme,
     expiresIn: data.expires_in,
     questionImageUrl: data.question_image_url,
     options: data.options,
