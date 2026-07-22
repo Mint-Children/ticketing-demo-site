@@ -14,6 +14,7 @@
   --orange: #F0691E;
   --orange-2: #DD5413;
   --gold: #F4A62A;
+  --captcha-on-accent: #FFFFFF;
   --line: #ECD9C3;
   --line-soft: #F3E7D6;
   --card: #FFFFFF;
@@ -77,8 +78,8 @@
   padding: 0; overflow: hidden;
 }
 .vlur-captcha-scope .tile:hover { border-color: var(--gold); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
-.vlur-captcha-scope .tile:focus-visible { outline: 3px solid rgba(240,105,30,.45); outline-offset: 2px; }
-.vlur-captcha-scope .tile.sel { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(240,105,30,.16); }
+.vlur-captcha-scope .tile:focus-visible { outline: 3px solid color-mix(in srgb, var(--orange) 45%, transparent); outline-offset: 2px; }
+.vlur-captcha-scope .tile.sel { border-color: var(--orange); box-shadow: 0 0 0 3px color-mix(in srgb, var(--orange) 16%, transparent); }
 .vlur-captcha-scope .tile.dragging { opacity: .35; }
 .vlur-captcha-scope .tile svg { width: 46px; height: 46px; }
 .vlur-captcha-scope .tile-photo { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
@@ -99,7 +100,13 @@
 .vlur-captcha-scope .drop {
   margin-top: 14px; display: flex; align-items: center; gap: 14px;
   border: 1.5px dashed var(--line); border-radius: 16px; padding: 16px 18px;
-  background: repeating-linear-gradient(45deg,var(--card),var(--card) 12px,var(--paper) 12px,var(--paper) 24px);
+  background: repeating-linear-gradient(
+    45deg,
+    var(--card),
+    var(--card) 12px,
+    color-mix(in srgb, var(--orange) 8%, var(--card)) 12px,
+    color-mix(in srgb, var(--orange) 8%, var(--card)) 24px
+  );
   transition: .16s;
 }
 .vlur-captcha-scope .drop.hot { border-color: var(--orange); background: var(--peach); transform: scale(1.01); }
@@ -110,16 +117,19 @@
   width: 34px; height: 34px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 700; font-family: var(--disp);
-  border: 2px dashed var(--line); color: var(--muted); background: var(--paper);
+  border: 2px dashed color-mix(in srgb, var(--orange) 58%, var(--line));
+  color: var(--orange-2); background: color-mix(in srgb, var(--orange) 11%, var(--card));
+  box-shadow: 0 5px 16px -12px var(--orange);
   transition: .18s; pointer-events: none;
 }
 .vlur-captcha-scope .drag-waypoint.visited {
-  border-style: solid; border-color: var(--ok); color: #fff; background: var(--ok);
-  box-shadow: 0 0 0 4px rgba(46,158,107,.16);
+  border-style: solid; border-color: var(--orange-2); color: var(--captcha-on-accent); background: var(--orange);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--orange) 17%, transparent), 0 8px 18px -12px var(--orange-2);
 }
 .vlur-captcha-scope .drop .cart {
   width: 46px; height: 46px; flex: 0 0 46px; display: flex; align-items: center; justify-content: center;
   background: var(--card); border: 1.5px solid var(--line); border-radius: 12px;
+  color: var(--orange);
 }
 .vlur-captcha-scope .drop .cart svg { width: 26px; height: 26px; }
 .vlur-captcha-scope .drop .dtxt b { display: block; font-size: 15px; color: var(--ink); }
@@ -154,7 +164,7 @@
   font-family: var(--disp); letter-spacing: .04em; cursor: pointer;
   transition: background .15s, color .15s, transform .15s;
 }
-.vlur-captcha-scope .demo-retry-btn:hover { background: var(--orange); color: #fff; transform: scale(1.04); }
+.vlur-captcha-scope .demo-retry-btn:hover { background: var(--orange); color: var(--captcha-on-accent); transform: scale(1.04); }
 
 .vlur-captcha-scope .demo-escalation-notice {
   border: 1px solid var(--gold); background: var(--peach); border-radius: 12px;
