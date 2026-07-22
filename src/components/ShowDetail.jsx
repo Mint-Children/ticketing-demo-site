@@ -74,8 +74,6 @@ export default function ShowDetail({ show, onBack, onStartBooking }) {
             ))}
           </div>
 
-          <p className="tk-seat-empty">좌석은 다음 단계(인증 완료 후)에서 배치도를 통해 직접 선택합니다.</p>
-
           <button className="tk-book-btn" onClick={handleBook}>예매하기</button>
           <button className="tk-ghost-btn" type="button">장바구니 담기</button>
           <button className="tk-ghost-btn" type="button">찜하기</button>

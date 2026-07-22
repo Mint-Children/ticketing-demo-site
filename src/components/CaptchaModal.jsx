@@ -9,9 +9,6 @@ export default function CaptchaModal({ onCancel, onVerified }) {
     <div className="tk-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
       <div className="tk-modal wide">
         <button className="tk-modal-close" onClick={onCancel} aria-label="닫기">×</button>
-        <div className="tk-modal-eyebrow">AI CAPTCHA</div>
-        <h2>AI CAPTCHA 인증</h2>
-        <p className="tk-modal-desc">자동 예매 봇 방지를 위해 인증을 완료해 주세요.</p>
 
         <div className="vlur-captcha-scope">
           <CaptchaDemo onVerified={onVerified} />

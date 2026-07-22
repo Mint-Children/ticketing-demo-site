@@ -166,7 +166,12 @@ function useApiCaptcha(captchaType, onVerified, { onEscalate } = {}) {
           }
           return;
         }
-        setScreen('fail');
+        // 오답도 유형1에서는 곧바로 재시도시키지 않고 유형2로 넘겨 한 번 더 검증한다.
+        if (onEscalate) {
+          onEscalate();
+        } else {
+          setScreen('fail');
+        }
       })
       .catch(() => {
         if (!mountedRef.current) return;
@@ -421,13 +426,10 @@ function DragCaptcha({ onVerified, onEscalate }) {
    onVerified: 검증 성공 시 호스트 사이트로 알려주는 콜백 (선택)
 ══════════════════════════════════════ */
 export default function CaptchaDemo({ onClick, onVerified }) {
+  // 유형은 사용자가 직접 고르지 않는다 — 처음엔 항상 유형1이고, 실패(오답·애매한 봇 의심 점수)
+  // 시에만 시스템이 자동으로 유형2로 넘긴다. 실제 CAPTCHA는 봇이 검증 방식을 스스로 고르게 두지 않는다.
   const [type, setType] = useState(1);
-  const [escalated, setEscalated] = useState(false); // 유형1에서 애매하게 감지되어 자동으로 유형2로 이동한 경우
-
-  const switchType = (t) => {
-    setEscalated(false); // 사용자가 직접 탭을 누른 경우 — 강제 이동 안내는 초기화
-    setType(t);
-  };
+  const [escalated, setEscalated] = useState(false);
 
   const handleEscalate = () => {
     setEscalated(true);
@@ -440,24 +442,6 @@ export default function CaptchaDemo({ onClick, onVerified }) {
         <div className="dots">
           <i style={{ background: type === 1 ? 'var(--orange)' : 'var(--line)' }}/>
           <i style={{ background: type === 2 ? 'var(--orange)' : 'var(--line)' }}/>
-        </div>
-        <div style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
-          {[1, 2].map(t => (
-            <button
-              key={t}
-              onClick={() => switchType(t)}
-              style={{
-                fontFamily: 'var(--disp)', fontSize: 11, fontWeight: 700,
-                letterSpacing: '.1em', padding: '3px 10px', borderRadius: 8,
-                border: type === t ? 'none' : '1.5px solid var(--line)',
-                background: type === t ? 'linear-gradient(90deg, var(--gold), var(--orange))' : 'var(--paper)',
-                color: type === t ? 'var(--paper)' : 'var(--muted)',
-                cursor: 'pointer', transition: '.15s',
-              }}
-            >
-              유형 {t}
-            </button>
-          ))}
         </div>
       </div>
 
