@@ -7,16 +7,8 @@ import CaptchaDemo from './CaptchaDemo';
 export default function CaptchaModal({ onCancel, onVerified }) {
   return (
     <div className="tk-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
-      <div className="tk-modal wide">
-        <button className="tk-modal-close" onClick={onCancel} aria-label="닫기">×</button>
-
-        <div className="vlur-captcha-scope">
-          <CaptchaDemo onVerified={onVerified} />
-        </div>
-
-        <div className="tk-modal-actions">
-          <button className="tk-ghost-btn" style={{ flex: 1 }} onClick={onCancel}>취소</button>
-        </div>
+      <div className="vlur-captcha-scope">
+        <CaptchaDemo onVerified={onVerified} onClose={onCancel} />
       </div>
     </div>
   );

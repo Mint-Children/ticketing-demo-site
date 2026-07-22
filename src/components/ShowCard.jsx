@@ -16,7 +16,7 @@ export default function ShowCard({ show, onSelect }) {
         <div className="tk-card-cat">{show.category}</div>
         <div className="tk-card-title">{show.title}</div>
         <div className="tk-tags">
-          {show.captchaRequired && <span className="tk-tag captcha">AI CAPTCHA 적용</span>}
+          {show.captchaRequired && <span className="tk-tag captcha">클린예매 서비스 적용</span>}
           <span className="tk-tag">{show.traffic}</span>
         </div>
         <div className="tk-card-meta">{show.period}</div>

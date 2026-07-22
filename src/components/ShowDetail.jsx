@@ -29,7 +29,7 @@ export default function ShowDetail({ show, onBack, onStartBooking }) {
           <div className="tk-subtitle">{show.subtitle}</div>
 
           <div className="tk-tags" style={{ marginBottom: 18 }}>
-            {show.captchaRequired && <span className="tk-tag captcha">AI CAPTCHA 적용</span>}
+            {show.captchaRequired && <span className="tk-tag captcha">클린예매 서비스 적용</span>}
             <span className="tk-tag">{show.traffic}</span>
           </div>
 
@@ -50,7 +50,7 @@ export default function ShowDetail({ show, onBack, onStartBooking }) {
           <div className="tk-booking-sub">{show.period}</div>
           <div className="tk-booking-sub" style={{ marginBottom: 4 }}>{show.venue}</div>
           <div className="tk-tags" style={{ margin: '8px 0 12px' }}>
-            {show.captchaRequired && <span className="tk-tag captcha">AI CAPTCHA 적용</span>}
+            {show.captchaRequired && <span className="tk-tag captcha">클린예매 서비스 적용</span>}
             <span className="tk-tag">{show.traffic}</span>
           </div>
 
