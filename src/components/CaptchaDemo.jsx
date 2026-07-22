@@ -191,8 +191,14 @@ function useApiCaptcha(captchaType, onVerified, { onEscalate, onTheme } = {}) {
           onVerified?.();
           return;
         }
+        // 어떤 사유로 실패하든(오답·애매한 점수·봇 차단) 같은 유형을 곧바로 재시도시키지 않고
+        // 다른 유형으로 넘겨 한 번 더 검증한다 — 유형1↔유형2를 계속 번갈아가며 검증.
         if (result.blocked) {
-          setScreen('bot-blocked');
+          if (onEscalate) {
+            onEscalate();
+          } else {
+            setScreen('bot-blocked');
+          }
           return;
         }
         if (result.ambiguous) {
@@ -203,7 +209,11 @@ function useApiCaptcha(captchaType, onVerified, { onEscalate, onTheme } = {}) {
           }
           return;
         }
-        setScreen('fail');
+        if (onEscalate) {
+          onEscalate();
+        } else {
+          setScreen('fail');
+        }
       })
       .catch(() => {
         if (!mountedRef.current) return;
@@ -339,9 +349,9 @@ function GhostTile({ ghost, themeStyle }) {
 /* ══════════════════════════════════════
    4지선다 보기 중 정답을 경유 지점을 지나 드롭존까지 드래그 (유형 2)
 ══════════════════════════════════════ */
-function MatchDragCaptcha({ onVerified, escalationNotice, onTheme, themeStyle }) {
+function MatchDragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
   const { challenge, loadState, selected, ghost, dropState, visited, missedHint, screen, submitting, waypointRefs, reset, onPointerDown } =
-    useApiCaptcha('type2_identify', onVerified, { onTheme });
+    useApiCaptcha('type2_identify', onVerified, { onEscalate, onTheme });
 
   if (screen === 'success') return <SuccessScreen onReset={reset} />;
   if (screen === 'fail')    return <FailScreen onReset={reset} />;
@@ -359,12 +369,6 @@ function MatchDragCaptcha({ onVerified, escalationNotice, onTheme, themeStyle })
 
   return (
     <div className="demo-body">
-      {escalationNotice && (
-        <div className="demo-escalation-notice">
-          <b>추가 확인이 필요합니다</b>
-          <span>아래 문제를 이어서 진행해 주세요.</span>
-        </div>
-      )}
       <div className="demo-q">
         <span>아래 <b style={{ color: 'var(--orange)' }}>이미지</b>에 해당하는 보기를 경유 지점을 지나 끌어다 놓아주세요</span>
       </div>
@@ -389,10 +393,6 @@ function MatchDragCaptcha({ onVerified, escalationNotice, onTheme, themeStyle })
 
       <WaypointTrack waypointRefs={waypointRefs} visited={visited} />
       <DropZone dropState={dropState} missedHint={missedHint} submitting={submitting} />
-
-      <div className="demo-foot" style={{ justifyContent: 'flex-end' }}>
-        <button className="reset" onClick={reset}>새로운 문제</button>
-      </div>
 
       <GhostTile ghost={ghost} themeStyle={themeStyle} />
     </div>
@@ -444,10 +444,6 @@ function DragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
       <WaypointTrack waypointRefs={waypointRefs} visited={visited} />
       <DropZone dropState={dropState} missedHint={missedHint} submitting={submitting} />
 
-      <div className="demo-foot" style={{ justifyContent: 'flex-end' }}>
-        <button className="reset" onClick={reset}>새로운 문제</button>
-      </div>
-
       <GhostTile ghost={ghost} themeStyle={themeStyle} />
     </div>
   );
@@ -457,52 +453,29 @@ function DragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
    메인 래퍼 — 유형 탭 토글
    onVerified: 검증 성공 시 호스트 사이트로 알려주는 콜백 (선택)
 ══════════════════════════════════════ */
-export default function CaptchaDemo({ onClick, onVerified }) {
+export default function CaptchaDemo({ onClick, onVerified, onClose }) {
+  // 유형은 사용자가 직접 고르지 않는다 — 처음엔 항상 유형1이고, 실패(오답·애매한 봇 의심 점수·차단)
+  // 시마다 시스템이 자동으로 반대 유형으로 넘긴다. 통과할 때까지 유형1↔유형2를 계속 번갈아 검증한다.
   const [type, setType] = useState(1);
-  const [escalated, setEscalated] = useState(false); // 유형1에서 애매하게 감지되어 자동으로 유형2로 이동한 경우
   const [theme, setTheme] = useState(null);
   const themeStyle = buildThemeStyle(theme);
 
-  const switchType = (t) => {
-    setEscalated(false); // 사용자가 직접 탭을 누른 경우 — 강제 이동 안내는 초기화
-    setType(t);
-  };
-
-  const handleEscalate = () => {
-    setEscalated(true);
-    setType(2);
+  const handleFailover = () => {
+    setType((prev) => (prev === 1 ? 2 : 1));
   };
 
   return (
     <div className="demo" id="demo" onClick={onClick} style={themeStyle}>
       <div className="demo-top">
-        <div className="dots">
-          <i style={{ background: type === 1 ? 'var(--orange)' : 'var(--line)' }}/>
-          <i style={{ background: type === 2 ? 'var(--orange)' : 'var(--line)' }}/>
-        </div>
-        <div style={{ display: 'flex', gap: 4, marginLeft: 12 }}>
-          {[1, 2].map(t => (
-            <button
-              key={t}
-              onClick={() => switchType(t)}
-              style={{
-                fontFamily: 'var(--disp)', fontSize: 11, fontWeight: 700,
-                letterSpacing: '.1em', padding: '3px 10px', borderRadius: 8,
-                border: type === t ? 'none' : '1.5px solid color-mix(in srgb, var(--orange) 40%, var(--line))',
-                background: type === t ? 'linear-gradient(90deg, var(--gold), var(--orange))' : 'color-mix(in srgb, var(--orange) 10%, var(--card))',
-                color: type === t ? 'var(--captcha-on-accent, var(--paper))' : 'var(--orange-2)',
-                cursor: 'pointer', transition: '.15s',
-              }}
-            >
-              유형 {t}
-            </button>
-          ))}
-        </div>
+        <span className="demo-brand">클린예매</span>
+        {onClose && (
+          <button className="demo-close" onClick={onClose} aria-label="닫기">×</button>
+        )}
       </div>
 
       {type === 1
-        ? <DragCaptcha onVerified={onVerified} onEscalate={handleEscalate} onTheme={setTheme} themeStyle={themeStyle} />
-        : <MatchDragCaptcha onVerified={onVerified} escalationNotice={escalated} onTheme={setTheme} themeStyle={themeStyle} />}
+        ? <DragCaptcha onVerified={onVerified} onEscalate={handleFailover} onTheme={setTheme} themeStyle={themeStyle} />
+        : <MatchDragCaptcha onVerified={onVerified} onEscalate={handleFailover} onTheme={setTheme} themeStyle={themeStyle} />}
     </div>
   );
 }

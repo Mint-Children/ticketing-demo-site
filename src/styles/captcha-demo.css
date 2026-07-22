@@ -40,12 +40,19 @@
   overflow: hidden;
 }
 .vlur-captcha-scope .demo-top {
-  display: flex; align-items: center; gap: 10px; padding: 13px 18px;
+  position: relative; display: flex; align-items: center; justify-content: center; padding: 16px 18px;
   border-bottom: 1px solid var(--line-soft); background: linear-gradient(var(--peach),var(--card));
+  min-height: 20px;
 }
-.vlur-captcha-scope .demo-top .dots { display: flex; gap: 6px; }
-.vlur-captcha-scope .demo-top .dots i { width: 10px; height: 10px; border-radius: 50%; display: block; background: var(--line); }
-.vlur-captcha-scope .demo-top .dots i:first-child { background: var(--orange); }
+.vlur-captcha-scope .demo-brand {
+  font-family: var(--disp); font-size: 20px; font-weight: 800; letter-spacing: .02em; color: var(--orange-2);
+}
+.vlur-captcha-scope .demo-close {
+  position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+  border: none; background: none; padding: 0; line-height: 1; font-size: 20px;
+  color: var(--ink-soft); cursor: pointer;
+}
+.vlur-captcha-scope .demo-close:hover { color: var(--orange-2); }
 .vlur-captcha-scope .demo-body {
   padding: 20px;
   min-height: 560px;
@@ -53,7 +60,6 @@
   flex-direction: column;
 }
 .vlur-captcha-scope .demo-body .drop { margin-bottom: 20px; }
-.vlur-captcha-scope .demo-body .demo-foot { margin-top: auto; }
 .vlur-captcha-scope .demo-q {
   position: relative; display: flex; align-items: center; justify-content: center; gap: 10px;
   background: var(--peach); border: 1px dashed var(--peach-deep); border-radius: 14px;
@@ -134,13 +140,6 @@
 .vlur-captcha-scope .drop .cart svg { width: 26px; height: 26px; }
 .vlur-captcha-scope .drop .dtxt b { display: block; font-size: 15px; color: var(--ink); }
 .vlur-captcha-scope .drop .dtxt span { font-size: 13px; color: var(--muted); }
-.vlur-captcha-scope .demo-foot { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
-.vlur-captcha-scope .demo-foot .reset {
-  margin-left: auto; font-size: 13px; color: var(--ink-soft); background: none;
-  border: 1px solid var(--line); border-radius: 10px; padding: 7px 12px; cursor: pointer; font-weight: 500;
-}
-.vlur-captcha-scope .demo-foot .reset:hover { border-color: var(--orange); color: var(--orange-2); }
-
 .vlur-captcha-scope .demo-success-body {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 16px; padding: 36px 24px; text-align: center;
@@ -165,13 +164,6 @@
   transition: background .15s, color .15s, transform .15s;
 }
 .vlur-captcha-scope .demo-retry-btn:hover { background: var(--orange); color: var(--captcha-on-accent); transform: scale(1.04); }
-
-.vlur-captcha-scope .demo-escalation-notice {
-  border: 1px solid var(--gold); background: var(--peach); border-radius: 12px;
-  padding: 10px 14px; margin-bottom: 14px;
-}
-.vlur-captcha-scope .demo-escalation-notice b { display: block; font-size: 12.5px; color: var(--orange-2); margin-bottom: 2px; }
-.vlur-captcha-scope .demo-escalation-notice span { font-size: 11.5px; color: var(--ink-soft); }
 
 @keyframes vlur-demo-pop {
   0%   { transform: scale(0.5); opacity: 0; }
