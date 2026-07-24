@@ -39,13 +39,20 @@ export async function fetchChallenge(captchaType) {
   };
 }
 
-export function verifyChallenge({ challengeToken, selectedOptionId, dropPosition, dragTrace, responseTimeMs }) {
+export function verifyChallenge({
+  challengeToken, selectedOptionId, dropPosition, dragTrace, responseTimeMs,
+  pointerType, waypoints, startCenter, dropCenter,
+}) {
   return post('/api/v1/captcha/verify', {
     challenge_token: challengeToken,
     selected_option_id: selectedOptionId,
     drop_position: dropPosition ?? null,
     drag_trace: dragTrace ?? [],
     response_time_ms: responseTimeMs ?? null,
+    pointer_type: pointerType ?? null,
+    waypoints: waypoints ?? [],
+    start_center: startCenter ?? null,
+    drop_center: dropCenter ?? null,
   });
 }
 
