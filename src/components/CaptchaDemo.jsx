@@ -123,6 +123,8 @@ function useApiCaptcha(captchaType, onVerified, { onEscalate, onTheme } = {}) {
   const submittingRef = useRef(false);
   const visitedRef = useRef(visited);
   const waypointRefs = useRef([]);
+  const waypointPositionsRef = useRef([]);
+  const pointerTypeRef = useRef('mouse');
   const samplesRef = useRef([]);
   const challengeRef = useRef(null);
   const mountedRef = useRef(true);
@@ -173,6 +175,12 @@ function useApiCaptcha(captchaType, onVerified, { onEscalate, onTheme } = {}) {
     const responseTimeMs = samples.length >= 2
       ? Math.round(samples[samples.length - 1].t - samples[0].t)
       : null;
+    const startCenter = samples.length ? { x: samples[0].x, y: samples[0].y } : dropPosition;
+    const dropEl = document.getElementById(DROP_ZONE_ID);
+    const dropRect = dropEl?.getBoundingClientRect();
+    const dropCenter = dropRect
+      ? { x: dropRect.left + dropRect.width / 2, y: dropRect.top + dropRect.height / 2 }
+      : dropPosition;
 
     verifyChallenge({
       challengeToken: current.challengeToken,
@@ -180,6 +188,10 @@ function useApiCaptcha(captchaType, onVerified, { onEscalate, onTheme } = {}) {
       dropPosition,
       dragTrace: samples,
       responseTimeMs,
+      pointerType: pointerTypeRef.current,
+      waypoints: waypointPositionsRef.current,
+      startCenter,
+      dropCenter,
     })
       .then((result) => {
         if (!mountedRef.current) return;
@@ -235,6 +247,12 @@ function useApiCaptcha(captchaType, onVerified, { onEscalate, onTheme } = {}) {
     visitedRef.current = freshVisited;
     setVisited(freshVisited);
     samplesRef.current = [{ x: e.clientX, y: e.clientY, t: performance.now() }];
+    pointerTypeRef.current = e.pointerType || 'mouse';
+    // 경유점 위치는 드래그 중 레이아웃이 안 바뀌므로 시작 시점에 한 번만 스냅샷
+    waypointPositionsRef.current = waypointRefs.current.map((el) => {
+      const r = el.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    });
 
     const onMove = (ev) => {
       setGhost({ imageUrl: opt?.image_url, x: ev.clientX, y: ev.clientY });
