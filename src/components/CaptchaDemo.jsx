@@ -18,20 +18,19 @@ function normalizeHex(value, fallback) {
 }
 
 function useAutoFitScale(ref, verticalMargin = 24, minScale = 0.6) {
-  const [scale, setScale] = useState(1);
-  const scaleRef = useRef(1); // 마지막으로 적용한 scale을 기억해서 측정값을 역보정
-
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
     const recalc = () => {
-      const appliedScale = scaleRef.current || 1;
-      const naturalHeight = el.scrollHeight / appliedScale; // zoom 영향을 제거한 실제 콘텐츠 높이
+      const prevZoom = el.style.zoom;
+      el.style.zoom = '1';                 // 측정 순간엔 항상 원본 크기로 되돌려서 잰다
+      const naturalHeight = el.scrollHeight; // 역산 없이 있는 그대로의 값
       const available = window.innerHeight - verticalMargin * 2;
       const next = Math.min(1, Math.max(minScale, available / naturalHeight));
-      scaleRef.current = next;
-      setScale(next);
+      el.style.zoom = String(next);          // 계산한 값으로 다시 설정
     };
+
     recalc();
     const ro = new ResizeObserver(recalc);
     ro.observe(el);
@@ -39,10 +38,9 @@ function useAutoFitScale(ref, verticalMargin = 24, minScale = 0.6) {
     return () => {
       ro.disconnect();
       window.removeEventListener('resize', recalc);
+      el.style.zoom = '';
     };
   }, [ref, verticalMargin, minScale]);
-
-  return scale;
 }
 
 function mixHexColors(color, target = '#FFFFFF', targetRatio = 0.5) {
@@ -524,7 +522,7 @@ export default function CaptchaDemo({ onClick, onVerified, onClose }) {
   const [theme, setTheme] = useState(null);
   const themeStyle = buildThemeStyle(theme);
   const demoRef = useRef(null);
-  const scale = useAutoFitScale(demoRef, 12, type === 2 ? 0.85 : 0.6);
+  useAutoFitScale(demoRef, 12, type === 2 ? 0.85 : 0.6);  // 반환값 없음, 훅이 알아서 el.style.zoom을 설정
 
   const handleFailover = () => {
     setType((prev) => (prev === 1 ? 2 : 1));
@@ -536,7 +534,7 @@ export default function CaptchaDemo({ onClick, onVerified, onClose }) {
       id="demo"
       ref={demoRef}
       onClick={onClick}
-      style={{ ...themeStyle, zoom: scale }}
+      style={themeStyle}
     >
       <div className="demo-top">
         <span className="demo-brand">클린예매</span>
