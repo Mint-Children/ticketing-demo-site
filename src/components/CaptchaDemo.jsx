@@ -17,6 +17,34 @@ function normalizeHex(value, fallback) {
   return /^#[0-9a-f]{6}$/i.test(value || '') ? value.toUpperCase() : fallback;
 }
 
+function useAutoFitScale(ref, verticalMargin = 24, minScale = 0.6) {
+  const [scale, setScale] = useState(1);
+  const scaleRef = useRef(1); // 마지막으로 적용한 scale을 기억해서 측정값을 역보정
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const recalc = () => {
+      const appliedScale = scaleRef.current || 1;
+      const naturalHeight = el.scrollHeight / appliedScale; // zoom 영향을 제거한 실제 콘텐츠 높이
+      const available = window.innerHeight - verticalMargin * 2;
+      const next = Math.min(1, Math.max(minScale, available / naturalHeight));
+      scaleRef.current = next;
+      setScale(next);
+    };
+    recalc();
+    const ro = new ResizeObserver(recalc);
+    ro.observe(el);
+    window.addEventListener('resize', recalc);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', recalc);
+    };
+  }, [ref, verticalMargin, minScale]);
+
+  return scale;
+}
+
 function mixHexColors(color, target = '#FFFFFF', targetRatio = 0.5) {
   const source = normalizeHex(color, DEFAULT_THEME.accent);
   const destination = normalizeHex(target, '#FFFFFF');
@@ -95,26 +123,37 @@ function StatusScreen({ text }) {
    문제 발급(challenge)·정답 판정·봇 의심 점수 계산은 전부 서버 API가 담당한다.
 ══════════════════════════════════════ */
 
-// 타일과 드롭존 사이 여백(px) — 이 값을 키우면 드래그 거리가 길어짐
+// 타일과 드롭존 사이 여백(px)
 const DRAG_GAP_PX = 180;
 
-// 드래그 경로가 지나야 하는 경유 지점 (gap 영역 기준 좌: %, 상: px)
-const WAYPOINTS = [
-  { left: '28%', top: 50 },
-  { left: '72%', top: 128 },
-];
-const WAYPOINT_RADIUS_PX = 30; // 이 반경 안으로 포인터가 들어오면 통과로 인정
+// 경유 지점을 매 문제/시도마다 다른 위치에 배치
+const WAYPOINT_LEFT_MIN = 15;   // %
+const WAYPOINT_LEFT_MAX = 85;   // %
+const WAYPOINT_TOP_MARGIN = 24; // px, 트랙 상/하 여백
+
+function randomWaypoints(trackHeight, count = 2) {
+  const zoneWidth = (WAYPOINT_LEFT_MAX - WAYPOINT_LEFT_MIN) / count;
+  return Array.from({ length: count }, (_, i) => {
+    const zoneStart = WAYPOINT_LEFT_MIN + zoneWidth * i;
+    const leftPct = zoneStart + zoneWidth * 0.2 + Math.random() * zoneWidth * 0.6;
+    const top = WAYPOINT_TOP_MARGIN + Math.random() * (trackHeight - WAYPOINT_TOP_MARGIN * 2);
+    return { left: `${leftPct.toFixed(1)}%`, top: Math.round(top) };
+  });
+}
+
+const WAYPOINT_RADIUS_PX = 30;
 const DROP_ZONE_ID = 'captcha-drop-drag';
 
 function useApiCaptcha(captchaType, onVerified, { onEscalate, onTheme } = {}) {
-  const [challenge, setChallenge] = useState(null); // { challengeToken, questionImageUrl, options }
-  const [loadState, setLoadState] = useState('loading'); // 'loading' | 'ready' | 'error'
-  const [selected, setSelected] = useState(null); // option_id
+  const [challenge, setChallenge] = useState(null);
+  const [loadState, setLoadState] = useState('loading');
+  const [selected, setSelected] = useState(null);
   const [solved, setSolved] = useState(false);
   const [dropState, setDropState] = useState('idle');
   const [ghost, setGhost] = useState(null);
-  const [screen, setScreen] = useState(null); // null | 'success' | 'fail' | 'bot-blocked' | 'ambiguous' | 'network-error'
-  const [visited, setVisited] = useState(() => WAYPOINTS.map(() => false));
+  const [screen, setScreen] = useState(null);
+  const [waypoints, setWaypoints] = useState(() => randomWaypoints(DRAG_GAP_PX)); // ← 추가
+  const [visited, setVisited] = useState(() => waypoints.map(() => false));       // ← WAYPOINTS 대신 waypoints
   const [missedHint, setMissedHint] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -148,7 +187,9 @@ function useApiCaptcha(captchaType, onVerified, { onEscalate, onTheme } = {}) {
     setSolved(false);
     setDropState('idle');
     setScreen(null);
-    setVisited(WAYPOINTS.map(() => false));
+    const nextWaypoints = randomWaypoints(DRAG_GAP_PX); // ← 새 문제마다 새 위치
+    setWaypoints(nextWaypoints);
+    setVisited(nextWaypoints.map(() => false));          // ← WAYPOINTS.map(...) 대신
     setMissedHint(false);
     fetchChallenge(captchaType)
       .then((data) => {
@@ -243,12 +284,11 @@ function useApiCaptcha(captchaType, onVerified, { onEscalate, onTheme } = {}) {
     setSelected(optionId);
     setGhost({ imageUrl: opt?.image_url, x: e.clientX, y: e.clientY });
     setMissedHint(false);
-    const freshVisited = WAYPOINTS.map(() => false);
+    const freshVisited = waypoints.map(() => false); // ← WAYPOINTS 대신 waypoints
     visitedRef.current = freshVisited;
     setVisited(freshVisited);
     samplesRef.current = [{ x: e.clientX, y: e.clientY, t: performance.now() }];
     pointerTypeRef.current = e.pointerType || 'mouse';
-    // 경유점 위치는 드래그 중 레이아웃이 안 바뀌므로 시작 시점에 한 번만 스냅샷
     waypointPositionsRef.current = waypointRefs.current.map((el) => {
       const r = el.getBoundingClientRect();
       return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
@@ -259,15 +299,19 @@ function useApiCaptcha(captchaType, onVerified, { onEscalate, onTheme } = {}) {
       samplesRef.current.push({ x: ev.clientX, y: ev.clientY, t: performance.now() });
 
       let changed = false;
+      let prevPassed = true; // 이전 지점까지 순서대로 통과했는지
       const nextVisited = visitedRef.current.map((wasVisited, i) => {
+        if (!prevPassed) return wasVisited;
         if (wasVisited) return true;
+
         const el = waypointRefs.current[i];
-        if (!el) return wasVisited;
+        if (!el) { prevPassed = false; return wasVisited; }
         const r = el.getBoundingClientRect();
         const cx = r.left + r.width / 2;
         const cy = r.top + r.height / 2;
         const dist = Math.hypot(ev.clientX - cx, ev.clientY - cy);
         if (dist <= WAYPOINT_RADIUS_PX) { changed = true; return true; }
+        prevPassed = false;
         return wasVisited;
       });
       if (changed) {
@@ -302,18 +346,18 @@ function useApiCaptcha(captchaType, onVerified, { onEscalate, onTheme } = {}) {
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp, { once: true });
     e.preventDefault();
-  }, [submit]);
+  }, [submit, waypoints]);
 
   return {
     challenge, loadState, selected, ghost, dropState, visited, missedHint,
-    screen, submitting, waypointRefs, reset: loadChallenge, onPointerDown,
+    screen, submitting, waypoints, waypointRefs, reset: loadChallenge, onPointerDown, // ← waypoints 추가
   };
 }
 
-function WaypointTrack({ waypointRefs, visited }) {
+function WaypointTrack({ waypointRefs, visited, waypoints }) {
   return (
     <div style={{ position: 'relative', height: DRAG_GAP_PX }}>
-      {WAYPOINTS.map((wp, i) => (
+      {waypoints.map((wp, i) => (
         <div
           key={i}
           ref={el => { waypointRefs.current[i] = el; }}
@@ -368,7 +412,7 @@ function GhostTile({ ghost, themeStyle }) {
    4지선다 보기 중 정답을 경유 지점을 지나 드롭존까지 드래그 (유형 2)
 ══════════════════════════════════════ */
 function MatchDragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
-  const { challenge, loadState, selected, ghost, dropState, visited, missedHint, screen, submitting, waypointRefs, reset, onPointerDown } =
+  const { challenge, loadState, selected, ghost, dropState, visited, missedHint, screen, submitting, waypoints, waypointRefs, reset, onPointerDown } =
     useApiCaptcha('type2_identify', onVerified, { onEscalate, onTheme });
 
   if (screen === 'success') return <SuccessScreen onReset={reset} />;
@@ -392,7 +436,11 @@ function MatchDragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
       </div>
 
       <div className="captcha-reference">
-        <img src={resolveAssetUrl(challenge.questionImageUrl)} alt="문제 이미지" />
+        <img
+          src={resolveAssetUrl(challenge.questionImageUrl)}
+          alt="문제 이미지"
+          style={{ maxWidth: '100%', maxHeight: 180, objectFit: 'contain' }}  // 220 → 180으로 CSS와 통일
+        />
       </div>
 
       <div className="tiles choice-tiles">
@@ -409,7 +457,7 @@ function MatchDragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
         ))}
       </div>
 
-      <WaypointTrack waypointRefs={waypointRefs} visited={visited} />
+      <WaypointTrack waypointRefs={waypointRefs} visited={visited} waypoints={waypoints} />
       <DropZone dropState={dropState} missedHint={missedHint} submitting={submitting} />
 
       <GhostTile ghost={ghost} themeStyle={themeStyle} />
@@ -421,7 +469,7 @@ function MatchDragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
    드래그-투-타깃 CAPTCHA (유형 1)
 ══════════════════════════════════════ */
 function DragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
-  const { challenge, loadState, selected, ghost, dropState, visited, missedHint, screen, submitting, waypointRefs, reset, onPointerDown } =
+  const { challenge, loadState, selected, ghost, dropState, visited, missedHint, screen, submitting, waypoints, waypointRefs, reset, onPointerDown } =
     useApiCaptcha('type1_drag', onVerified, { onEscalate, onTheme });
 
   if (screen === 'success') return <SuccessScreen onReset={reset} />;
@@ -459,7 +507,7 @@ function DragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
         ))}
       </div>
 
-      <WaypointTrack waypointRefs={waypointRefs} visited={visited} />
+      <WaypointTrack waypointRefs={waypointRefs} visited={visited} waypoints={waypoints} />
       <DropZone dropState={dropState} missedHint={missedHint} submitting={submitting} />
 
       <GhostTile ghost={ghost} themeStyle={themeStyle} />
@@ -472,18 +520,24 @@ function DragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
    onVerified: 검증 성공 시 호스트 사이트로 알려주는 콜백 (선택)
 ══════════════════════════════════════ */
 export default function CaptchaDemo({ onClick, onVerified, onClose }) {
-  // 유형은 사용자가 직접 고르지 않는다 — 처음엔 항상 유형1이고, 실패(오답·애매한 봇 의심 점수·차단)
-  // 시마다 시스템이 자동으로 반대 유형으로 넘긴다. 통과할 때까지 유형1↔유형2를 계속 번갈아 검증한다.
   const [type, setType] = useState(1);
   const [theme, setTheme] = useState(null);
   const themeStyle = buildThemeStyle(theme);
+  const demoRef = useRef(null);
+  const scale = useAutoFitScale(demoRef, 12, type === 2 ? 0.85 : 0.6);
 
   const handleFailover = () => {
     setType((prev) => (prev === 1 ? 2 : 1));
   };
 
   return (
-    <div className="demo" id="demo" onClick={onClick} style={themeStyle}>
+    <div
+      className="demo"
+      id="demo"
+      ref={demoRef}
+      onClick={onClick}
+      style={{ ...themeStyle, zoom: scale }}
+    >
       <div className="demo-top">
         <span className="demo-brand">클린예매</span>
         {onClose && (
