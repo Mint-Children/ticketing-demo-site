@@ -17,6 +17,34 @@ function normalizeHex(value, fallback) {
   return /^#[0-9a-f]{6}$/i.test(value || '') ? value.toUpperCase() : fallback;
 }
 
+function useAutoFitScale(ref, verticalMargin = 24, minScale = 0.6) {
+  const [scale, setScale] = useState(1);
+  const scaleRef = useRef(1); // 마지막으로 적용한 scale을 기억해서 측정값을 역보정
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const recalc = () => {
+      const appliedScale = scaleRef.current || 1;
+      const naturalHeight = el.scrollHeight / appliedScale; // zoom 영향을 제거한 실제 콘텐츠 높이
+      const available = window.innerHeight - verticalMargin * 2;
+      const next = Math.min(1, Math.max(minScale, available / naturalHeight));
+      scaleRef.current = next;
+      setScale(next);
+    };
+    recalc();
+    const ro = new ResizeObserver(recalc);
+    ro.observe(el);
+    window.addEventListener('resize', recalc);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', recalc);
+    };
+  }, [ref, verticalMargin, minScale]);
+
+  return scale;
+}
+
 function mixHexColors(color, target = '#FFFFFF', targetRatio = 0.5) {
   const source = normalizeHex(color, DEFAULT_THEME.accent);
   const destination = normalizeHex(target, '#FFFFFF');
@@ -408,7 +436,11 @@ function MatchDragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
       </div>
 
       <div className="captcha-reference">
-        <img src={resolveAssetUrl(challenge.questionImageUrl)} alt="문제 이미지" />
+        <img
+          src={resolveAssetUrl(challenge.questionImageUrl)}
+          alt="문제 이미지"
+          style={{ maxWidth: '100%', maxHeight: 180, objectFit: 'contain' }}  // 220 → 180으로 CSS와 통일
+        />
       </div>
 
       <div className="tiles choice-tiles">
@@ -488,18 +520,24 @@ function DragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
    onVerified: 검증 성공 시 호스트 사이트로 알려주는 콜백 (선택)
 ══════════════════════════════════════ */
 export default function CaptchaDemo({ onClick, onVerified, onClose }) {
-  // 유형은 사용자가 직접 고르지 않는다 — 처음엔 항상 유형1이고, 실패(오답·애매한 봇 의심 점수·차단)
-  // 시마다 시스템이 자동으로 반대 유형으로 넘긴다. 통과할 때까지 유형1↔유형2를 계속 번갈아 검증한다.
   const [type, setType] = useState(1);
   const [theme, setTheme] = useState(null);
   const themeStyle = buildThemeStyle(theme);
+  const demoRef = useRef(null);
+  const scale = useAutoFitScale(demoRef, 12, type === 2 ? 0.85 : 0.6);
 
   const handleFailover = () => {
     setType((prev) => (prev === 1 ? 2 : 1));
   };
 
   return (
-    <div className="demo" id="demo" onClick={onClick} style={themeStyle}>
+    <div
+      className="demo"
+      id="demo"
+      ref={demoRef}
+      onClick={onClick}
+      style={{ ...themeStyle, zoom: scale }}
+    >
       <div className="demo-top">
         <span className="demo-brand">클린예매</span>
         {onClose && (
