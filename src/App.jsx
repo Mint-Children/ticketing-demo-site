@@ -20,11 +20,13 @@ export default function App() {
     setSelectedShowId(null);
     setModal(null);
     setBooking(null);
+    window.scrollTo(0, 0);
   };
 
   const openShow = (id) => {
     setSelectedShowId(id);
     setView('detail');
+    window.scrollTo(0, 0);
   };
 
   const handleStartBooking = (info) => {
@@ -54,10 +56,22 @@ export default function App() {
             <span className="tk-hero-eyebrow">TICKETON PICK</span>
             <h1>오늘 열리는 공연을 한눈에</h1>
             <p>콘서트부터 전시, 스포츠까지 티켓온에서 빠르게 예매하세요.</p>
-            <button className="tk-hero-btn" type="button">인기 공연 보기 →</button>
+            <button
+            className="tk-hero-btn"
+            type="button"
+            onClick={() => {
+              const el = document.getElementById('popular-shows');
+              if (el) {
+                const top = el.getBoundingClientRect().top + window.scrollY - 90;
+                window.scrollTo({ top, behavior: 'smooth' });
+              }
+            }}
+          >
+            인기 공연 보기 →
+          </button>
           </section>
 
-          <div className="tk-section-head">
+          <div className="tk-section-head" id="popular-shows">
             <h2>지금 인기 있는 공연</h2>
             <span>전체보기</span>
           </div>
