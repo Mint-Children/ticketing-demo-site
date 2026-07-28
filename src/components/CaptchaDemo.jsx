@@ -519,13 +519,18 @@ function DragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
 ══════════════════════════════════════ */
 export default function CaptchaDemo({ onClick, onVerified, onClose }) {
   const [type, setType] = useState(1);
+  const [retryKey, setRetryKey] = useState(0); // 같은 유형에서 재시도할 때 강제 리마운트용
   const [theme, setTheme] = useState(null);
   const themeStyle = buildThemeStyle(theme);
   const demoRef = useRef(null);
-  useAutoFitScale(demoRef, 12, type === 2 ? 0.85 : 0.6);  // 반환값 없음, 훅이 알아서 el.style.zoom을 설정
+  useAutoFitScale(demoRef, 12, type === 2 ? 0.85 : 0.6);
 
   const handleFailover = () => {
-    setType((prev) => (prev === 1 ? 2 : 1));
+    setType((prev) => {
+      if (prev === 1) return 2;       // 유형1 실패 → 유형2로 전환 (최초 1회만)
+      setRetryKey((k) => k + 1);      // 이미 유형2면 유형은 유지, 새 문제만 재발급
+      return prev;
+    });
   };
 
   return (
@@ -544,8 +549,8 @@ export default function CaptchaDemo({ onClick, onVerified, onClose }) {
       </div>
 
       {type === 1
-        ? <DragCaptcha onVerified={onVerified} onEscalate={handleFailover} onTheme={setTheme} themeStyle={themeStyle} />
-        : <MatchDragCaptcha onVerified={onVerified} onEscalate={handleFailover} onTheme={setTheme} themeStyle={themeStyle} />}
+        ? <DragCaptcha key={`t1-${retryKey}`} onVerified={onVerified} onEscalate={handleFailover} onTheme={setTheme} themeStyle={themeStyle} />
+        : <MatchDragCaptcha key={`t2-${retryKey}`} onVerified={onVerified} onEscalate={handleFailover} onTheme={setTheme} themeStyle={themeStyle} />}
     </div>
   );
 }
