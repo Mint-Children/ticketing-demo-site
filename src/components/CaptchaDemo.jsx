@@ -127,7 +127,15 @@ const DRAG_GAP_PX = 180;
 // 경유 지점을 매 문제/시도마다 다른 위치에 배치
 const WAYPOINT_LEFT_MIN = 15;   // %
 const WAYPOINT_LEFT_MAX = 85;   // %
-const WAYPOINT_TOP_MARGIN = 24; // px, 트랙 상/하 여백
+// 트랙 상/하 여백(px). 경유 지점의 실제 클릭(터치) 인식 반경은 시각적 원(지름 34px,
+// 반경 17px)보다 큰 WAYPOINT_RADIUS_PX(30px)이다 — 여백이 이 인식 반경보다 작으면
+// 인식 영역이 트랙 바깥(바로 위 보기 타일 영역)까지 넘어가 잘못 인식/오클릭으로
+// 이어질 수 있어, 인식 반경(30px)보다 넉넉하게 40px로 잡는다.
+const WAYPOINT_TOP_MARGIN = 40;
+// 트랙 자체와 보기 타일 사이에 추가로 확보하는 고정 여백. 위 여백은 트랙 "내부"에서
+// 경유 지점이 얼마나 아래에서 시작하는지를 정할 뿐이라, 트랙 컨테이너가 보기 타일
+// 바로 아래 붙어 있으면 여전히 가까워 보일 수 있어 이 여백을 별도로 더한다.
+const WAYPOINT_TRACK_TOP_GAP = 24; // px
 
 function randomWaypoints(trackHeight, count = 2) {
   const zoneWidth = (WAYPOINT_LEFT_MAX - WAYPOINT_LEFT_MIN) / count;
@@ -354,7 +362,7 @@ function useApiCaptcha(captchaType, onVerified, { onEscalate, onTheme } = {}) {
 
 function WaypointTrack({ waypointRefs, visited, waypoints }) {
   return (
-    <div style={{ position: 'relative', height: DRAG_GAP_PX }}>
+    <div style={{ position: 'relative', height: DRAG_GAP_PX, marginTop: WAYPOINT_TRACK_TOP_GAP }}>
       {waypoints.map((wp, i) => (
         <div
           key={i}
@@ -430,7 +438,7 @@ function MatchDragCaptcha({ onVerified, onEscalate, onTheme, themeStyle }) {
   return (
     <div className="demo-body">
       <div className="demo-q">
-        <span>아래 <b style={{ color: 'var(--orange)' }}>이미지</b>에 해당하는 보기를 경유 지점을 지나 끌어다 놓아주세요</span>
+        <span>아래 <b style={{ color: 'var(--orange)' }}>이미지</b>와 동일한 대상을 찾아 드래그하세요</span>
       </div>
 
       <div className="captcha-reference">
