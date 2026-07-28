@@ -7,9 +7,30 @@ import CaptchaModal from './components/CaptchaModal';
 import SeatMapModal from './components/SeatMapModal';
 import PaymentModal from './components/PaymentModal';
 import SuccessModal from './components/SuccessModal';
+import CaptchaTestPage from './components/CaptchaTestPage';
 import { SHOWS, getShowById } from './data/shows';
 
 export default function App() {
+  const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
+  const isCaptchaTestPath = pathname === '/captcha-test';
+
+  if (isCaptchaTestPath) {
+    if (import.meta.env.DEV) {
+      return <CaptchaTestPage />;
+    }
+
+    return (
+      <main className="tk-route-blocked">
+        <h1>404</h1>
+        <p>요청한 페이지를 찾을 수 없습니다.</p>
+      </main>
+    );
+  }
+
+  return <TicketingApp />;
+}
+
+function TicketingApp() {
   const [view, setView] = useState('home'); // 'home' | 'detail'
   const [selectedShowId, setSelectedShowId] = useState(null);
   const [booking, setBooking] = useState(null);

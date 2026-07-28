@@ -32,6 +32,66 @@ a { color: inherit; text-decoration: none; }
 
 .tk-app { min-height: 100%; display: flex; flex-direction: column; }
 
+/* ── Development-only CAPTCHA evaluator route ── */
+.tk-captcha-test {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(91, 61, 240, .12), transparent 32%),
+    var(--tk-bg);
+}
+.tk-captcha-test-panel { width: min(100%, 760px); }
+.tk-captcha-test-heading { margin-bottom: 18px; text-align: center; }
+.tk-captcha-test-heading span {
+  display: inline-block;
+  margin-bottom: 7px;
+  color: var(--tk-primary);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .14em;
+}
+.tk-captcha-test-heading h1 { margin: 0 0 5px; font-size: 23px; letter-spacing: -.02em; }
+.tk-captcha-test-heading p { margin: 0; color: var(--tk-muted); font-size: 13px; }
+.tk-captcha-test-panel > .vlur-captcha-scope { display: flex; justify-content: center; }
+.tk-captcha-test-result {
+  width: min(100%, 460px);
+  margin: 0 auto;
+  padding: 28px 26px;
+  border: 1px solid var(--tk-line);
+  border-radius: 22px;
+  background: var(--tk-card);
+  box-shadow: var(--tk-shadow);
+}
+
+.tk-captcha-test-result .tk-success-icon {
+  box-shadow: 0 10px 24px -12px rgba(34, 168, 85, .65);
+  animation: tk-captcha-success-pop .38s cubic-bezier(.175, .885, .32, 1.275) both;
+}
+.tk-captcha-test-result .tk-success-title { color: var(--tk-ink); }
+.tk-captcha-test-result .tk-success-desc { margin-top: 0; }
+.tk-captcha-test-result .tk-queue-info {
+  margin-top: 20px;
+  border: 1px solid color-mix(in srgb, var(--tk-ok) 18%, var(--tk-line));
+  background: var(--tk-ok-bg);
+}
+.tk-captcha-test-result .tk-queue-info dd { color: var(--tk-ok); }
+.tk-captcha-test-result .tk-ghost-btn { margin-bottom: 0; }
+
+@keyframes tk-captcha-success-pop {
+  from { transform: scale(.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.tk-route-blocked {
+  min-height: 100%;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+.tk-route-blocked h1 { margin: 0; font-size: 48px; }
+.tk-route-blocked p { margin: 4px 0 0; color: var(--tk-muted); }
+
 /* ── Header ── */
 .tk-header {
   position: sticky; top: 0; z-index: 40;
