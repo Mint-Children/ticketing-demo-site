@@ -14,7 +14,11 @@ export default function SuccessModal({ booking, onClose, onGoToConfirm }) {
       <div className="tk-modal">
         <button className="tk-modal-close" onClick={onClose} aria-label="닫기">×</button>
 
-        <div className="tk-success-icon">✓</div>
+        <div className="tk-success-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 13l4 4L19 7" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
         <div className="tk-success-title">예매 신청 완료</div>
         <p className="tk-success-desc">
           {show.captchaRequired

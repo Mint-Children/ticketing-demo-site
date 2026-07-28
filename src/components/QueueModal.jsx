@@ -66,7 +66,7 @@ export default function QueueModal({ booking, onCancel, onEnter }) {
           <dt>트래픽</dt><dd>{show.traffic}</dd>
         </dl>
 
-        <p className="tk-queue-auto-msg">대기 인원이 모두 빠지면 자동으로 입장합니다…</p>
+        <p className="tk-queue-auto-msg">대기 인원이 모두 빠지면 자동으로 입장합니다.</p>
 
         <div className="tk-modal-actions">
           <button className="tk-ghost-btn" onClick={onCancel}>취소</button>

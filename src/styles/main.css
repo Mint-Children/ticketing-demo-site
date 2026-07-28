@@ -191,12 +191,14 @@ a { color: inherit; text-decoration: none; }
 .tk-book-btn {
   width: 100%; padding: 13px; border-radius: 12px; border: none; background: var(--tk-primary); color: #fff;
   font-size: 14.5px; font-weight: 800; cursor: pointer; margin-top: 16px; margin-bottom: 8px; transition: .15s;
+  text-decoration: none;
 }
 .tk-book-btn:hover { background: var(--tk-primary-2); }
 .tk-book-btn:disabled { background: var(--tk-line); color: var(--tk-muted); cursor: not-allowed; }
 .tk-ghost-btn {
   width: 100%; padding: 11px; border-radius: 12px; border: 1px solid var(--tk-line); background: none;
   color: var(--tk-ink-soft); font-size: 13px; font-weight: 700; cursor: pointer; margin-bottom: 6px;
+  text-decoration: none;
 }
 
 /* ── Modals ── */
@@ -211,9 +213,12 @@ a { color: inherit; text-decoration: none; }
 }
 .tk-modal.wide { max-width: 640px; }
 .tk-modal-close {
-  position: absolute; top: 18px; right: 18px; border: none; background: none; font-size: 20px;
-  color: var(--tk-muted); cursor: pointer; line-height: 1;
+  position: absolute; top: 16px; right: 16px; border: none; background: none; font-size: 22px;
+  color: var(--tk-muted); cursor: pointer; line-height: 1; z-index: 10;
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; padding: 0;
 }
+.tk-modal-close:hover { background: var(--tk-bg); }
 .tk-modal-eyebrow { font-size: 10.5px; font-weight: 800; letter-spacing: .14em; color: var(--tk-primary); margin-bottom: 6px; }
 .tk-modal h2 { margin: 0 0 8px; font-size: 20px; font-weight: 800; }
 .tk-modal p.tk-modal-desc { margin: 0 0 18px; font-size: 13px; color: var(--tk-ink-soft); }
@@ -227,7 +232,17 @@ a { color: inherit; text-decoration: none; }
 .tk-queue-info dd { margin: 2px 0 0; font-weight: 800; font-size: 14px; }
 .tk-queue-auto-msg { text-align: center; font-size: 12px; color: var(--tk-muted); margin: 0 0 4px; }
 .tk-modal-actions { display: flex; gap: 10px; margin-top: 4px; }
-.tk-modal-actions .tk-book-btn, .tk-modal-actions .tk-ghost-btn { margin-bottom: 0; }
+.tk-modal-actions .tk-book-btn,
+.tk-modal-actions .tk-ghost-btn {
+  margin-bottom: 0;
+  margin-top: 0;
+  height: 46px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
 
 .tk-captcha-warn { border: 1px solid var(--tk-danger); background: var(--tk-danger-bg); border-radius: 12px; padding: 12px 14px; margin-bottom: 18px; }
 .tk-captcha-warn b { display: block; font-size: 13px; color: var(--tk-danger); margin-bottom: 2px; }
