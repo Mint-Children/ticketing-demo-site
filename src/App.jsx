@@ -20,11 +20,13 @@ export default function App() {
     setSelectedShowId(null);
     setModal(null);
     setBooking(null);
+    window.scrollTo(0, 0);
   };
 
   const openShow = (id) => {
     setSelectedShowId(id);
     setView('detail');
+    window.scrollTo(0, 0);
   };
 
   const handleStartBooking = (info) => {
