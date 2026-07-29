@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import CaptchaDemo from './CaptchaDemo';
+import CaptchaModal from './CaptchaModal';
 
 export default function CaptchaTestPage() {
   const [verified, setVerified] = useState(false);
@@ -21,9 +21,10 @@ export default function CaptchaTestPage() {
 
         {!verified ? (
           <div className="vlur-captcha-scope">
-            <CaptchaDemo
+            <CaptchaModal
               key={attempt}
               onVerified={() => setVerified(true)}
+              onCancel={() => {}}
             />
           </div>
         ) : (
