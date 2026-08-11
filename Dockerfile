@@ -7,9 +7,9 @@ RUN npm ci
 
 COPY . .
 
-ARG VLUR_API_BASE=http://localhost:8000
-ARG VLUR_PUBLIC_SITE_KEY=pk-aicap_dev_testuser_001
-ARG VLUR_WIDGET_URL=http://localhost:8000/static/widget/vlur-captcha.js
+ARG VLUR_API_BASE=https://vlur.site
+ARG VLUR_PUBLIC_SITE_KEY=pk-aicap_dev_testuser_002
+ARG VLUR_WIDGET_URL=https://vlur.site/static/widget/vlur-captcha.js
 
 RUN VITE_VLUR_API_BASE="${VLUR_API_BASE}" \
     VITE_VLUR_SITE_KEY="${VLUR_PUBLIC_SITE_KEY}" \
