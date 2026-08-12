@@ -4,7 +4,7 @@ services:
       context: .
       args:
         VLUR_API_BASE: https://vlur.site
-        VLUR_PUBLIC_SITE_KEY: pk-aicap_prod_jkb6XlDwXK5yhEo5N5-xnuLAjJJE_jF3
+        VLUR_PUBLIC_SITE_KEY: 
         VLUR_WIDGET_URL: https://vlur.site/static/widget/vlur-captcha.js
     ports:
       - "${APP_PORT:-5298}:80"
@@ -18,7 +18,7 @@ services:
     command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
     environment:
       VITE_VLUR_API_BASE: ${VITE_VLUR_API_BASE:-http://localhost:8000}
-      VITE_VLUR_SITE_KEY: ${VITE_VLUR_SITE_KEY:-pk-aicap_prod_jkb6XlDwXK5yhEo5N5-xnuLAjJJE_jF3}
+      VITE_VLUR_SITE_KEY: ${VITE_VLUR_SITE_KEY:-}
     ports:
       - "${DEV_PORT:-5298}:5298"
     volumes:
