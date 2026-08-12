@@ -30,6 +30,6 @@ jobs:
           push: true
           build-args: |
             VLUR_API_BASE=https://vlur.site
-            VLUR_PUBLIC_SITE_KEY=
+            VLUR_PUBLIC_SITE_KEY=pk-aicap_prod_jkb6XlDwXK5yhEo5N5-xnuLAjJJE_jF3
             VLUR_WIDGET_URL=https://vlur.site/static/widget/vlur-captcha.js
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
